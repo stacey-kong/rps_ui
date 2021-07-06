@@ -1,0 +1,11 @@
+$primary-color: rgb(66, 108, 128);
+$text-color: white;
+.container {
+  text-align: center;
+  span {
+    padding: 1rem;
+    background-color: $primary-color;
+    color: $text-color;
+    cursor: pointer;
+  }
+}
