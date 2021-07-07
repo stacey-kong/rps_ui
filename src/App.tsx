@@ -6,20 +6,30 @@ import { ethers } from "ethers";
 import { rpsAbi } from "./abi/abis";
 import { soliditySha3 } from "web3-utils";
 import Crypto from "crypto";
-import {CHOICE} from "./enum"
+import { CHOICE, GAME } from "./enum";
 
 declare let window: any;
 const provider = new ethers.providers.Web3Provider(window.ethereum);
 const rpsContractAddress = "0x5FbDB2315678afecb367f032d93F642f64180aa3";
-// const rpsContract = new ethers.Contract(rpsContractAddress, rpsAbi, provider);
-
-
+const rpsContract = new ethers.Contract(rpsContractAddress, rpsAbi, provider);
 
 export default function App() {
   const [account, setAccount] = useState<string | null>(null);
   const [balance, setBalance] = useState<number>(0);
   const [connection, setConnection] = useState<boolean>(false);
   const [contract, setContract] = useState<any>(null);
+
+  const formatNumber = function (bignumber: ethers.BigNumber) {
+    return ethers.BigNumber.from(bignumber).toNumber();
+  };
+
+  const formatEther = function (amount: ethers.BigNumber) {
+    return ethers.utils.formatEther(amount);
+  };
+
+  const formatDate = function (date: ethers.BigNumber) {
+    return ethers.BigNumber.from(date).toString();
+  };
 
   //detect whether there is and account connected
   const MetamaskConnection = async function (Accounts: string[] | null) {
@@ -28,10 +38,26 @@ export default function App() {
     if (accounts.length === 0) return;
     setConnection(true);
     setAccount(accounts[0]);
-    // const contractBalance = await provider.getBalance(rpsContractAddress);
-    // console.log(ethers.utils.formatEther(contractBalance));
+
     const balance = await provider.getBalance(accounts[0]);
     setBalance(+ethers.utils.formatEther(balance));
+  };
+
+  const loadGames = async function () {
+    let games = [];
+    const GameNum = await rpsContract.maxgame();
+    const gameNum = formatNumber(GameNum);
+    for (let i = 1; i <= gameNum; i++) {
+      let gameRaw = await rpsContract.games(i);
+
+      let game = {
+        value: formatEther(gameRaw.dealerValue._hex),
+        expiretime: formatDate(gameRaw.expireTime),
+      };
+      games.push(game);
+    }
+    console.log(games);
+    return games;
   };
 
   //if no account is connected, click to ask for authorization
@@ -67,7 +93,7 @@ export default function App() {
     return dealerHash;
   };
 
-  const createGame = async (choice:CHOICE,amount:string) => {
+  const createGame = async (choice: CHOICE, amount: string) => {
     const signer = provider.getSigner();
     const rpsContract = new ethers.Contract(rpsContractAddress, rpsAbi, signer);
     setContract(rpsContract);
@@ -80,6 +106,7 @@ export default function App() {
 
   useEffect(() => {
     MetamaskConnection(null);
+    loadGames();
   }, [connection]);
 
   return (
