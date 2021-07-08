@@ -6,6 +6,7 @@ export enum CHOICE {
 }
 
 export interface GAME {
-  value: number;
-  expireTime: number;
+  value: string;
+  expireTime: string;
+  id: number;
 }

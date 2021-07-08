@@ -241,11 +241,6 @@ export const rpsAbi = [
         name: "dealerHash",
         type: "bytes32",
       },
-      {
-        internalType: "address payable",
-        name: "player",
-        type: "address",
-      },
     ],
     name: "createGame",
     outputs: [
@@ -305,6 +300,11 @@ export const rpsAbi = [
     ],
     name: "games",
     outputs: [
+      {
+        internalType: "uint256",
+        name: "gameId",
+        type: "uint256",
+      },
       {
         internalType: "uint256",
         name: "expireTime",

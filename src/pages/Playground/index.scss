@@ -26,6 +26,13 @@ $text-color: white;
   margin-top: 8rem;
 }
 
+.gameList{
+  display: flex;
+  justify-content:space-around;
+  margin-top: 5rem;
+  list-style: none;
+}
+
 .popup {
   height: 20rem;
   width: 100%;

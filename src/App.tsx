@@ -6,30 +6,20 @@ import { ethers } from "ethers";
 import { rpsAbi } from "./abi/abis";
 import { soliditySha3 } from "web3-utils";
 import Crypto from "crypto";
-import { CHOICE, GAME } from "./enum";
+import { CHOICE } from "./enum";
+import { convertToBignumber } from "./utils";
+
 
 declare let window: any;
 const provider = new ethers.providers.Web3Provider(window.ethereum);
 const rpsContractAddress = "0x5FbDB2315678afecb367f032d93F642f64180aa3";
-const rpsContract = new ethers.Contract(rpsContractAddress, rpsAbi, provider);
+// const rpsContract = new ethers.Contract(rpsContractAddress, rpsAbi, provider);
 
 export default function App() {
   const [account, setAccount] = useState<string | null>(null);
   const [balance, setBalance] = useState<number>(0);
   const [connection, setConnection] = useState<boolean>(false);
-  const [contract, setContract] = useState<any>(null);
-
-  const formatNumber = function (bignumber: ethers.BigNumber) {
-    return ethers.BigNumber.from(bignumber).toNumber();
-  };
-
-  const formatEther = function (amount: ethers.BigNumber) {
-    return ethers.utils.formatEther(amount);
-  };
-
-  const formatDate = function (date: ethers.BigNumber) {
-    return ethers.BigNumber.from(date).toString();
-  };
+  // const [contract, setContract] = useState<any>(null);
 
   //detect whether there is and account connected
   const MetamaskConnection = async function (Accounts: string[] | null) {
@@ -43,23 +33,6 @@ export default function App() {
     setBalance(+ethers.utils.formatEther(balance));
   };
 
-  const loadGames = async function () {
-    let games = [];
-    const GameNum = await rpsContract.maxgame();
-    const gameNum = formatNumber(GameNum);
-    for (let i = 1; i <= gameNum; i++) {
-      let gameRaw = await rpsContract.games(i);
-
-      let game = {
-        value: formatEther(gameRaw.dealerValue._hex),
-        expiretime: formatDate(gameRaw.expireTime),
-      };
-      games.push(game);
-    }
-    console.log(games);
-    return games;
-  };
-
   //if no account is connected, click to ask for authorization
   const loadBlockchainData = async function () {
     let accounts = await window.ethereum.request({
@@ -68,7 +41,7 @@ export default function App() {
     MetamaskConnection(accounts);
   };
 
-  const generateHash = async (choice: CHOICE, contract: any) => {
+  const generateChoice = async (choice: CHOICE, contract: any) => {
     let choiceConstant;
     switch (choice) {
       case CHOICE.ROCK:
@@ -83,12 +56,17 @@ export default function App() {
       default:
         choiceConstant = await contract.NONE();
     }
+    return choiceConstant;
+  };
+
+  const generateHash = async (choice: CHOICE, contract: any) => {
+    let choiceConstant = await generateChoice(choice, contract);
+
     //checking
     if (account === null) return;
 
     let randomSecret = Crypto.randomBytes(10).toString("base64").slice(0, 10);
-    console.log(randomSecret);
-
+    localStorage.setItem("randomStr", randomSecret);
     let dealerHash = soliditySha3(account, choiceConstant, randomSecret);
     return dealerHash;
   };
@@ -96,17 +74,41 @@ export default function App() {
   const createGame = async (choice: CHOICE, amount: string) => {
     const signer = provider.getSigner();
     const rpsContract = new ethers.Contract(rpsContractAddress, rpsAbi, signer);
-    setContract(rpsContract);
+    // setContract(rpsContract);
     let dealerhash = await generateHash(choice, rpsContract);
     console.log(dealerhash);
-    await rpsContract.createGame(dealerhash, account, {
-      value: ethers.utils.parseEther(amount),
-    });
+    try {
+      await rpsContract
+        .createGame(dealerhash, {
+          value: ethers.utils.parseEther(amount),
+        })
+        .then((res: any) => console.log(res));
+    } catch (err) {
+      console.log("fail to creat game");
+      console.log(err)
+    }
+  };
+
+  const joinGame = async (choice: CHOICE, amount: string, gameid: number) => {
+    const signer = provider.getSigner();
+    const rpsContract = new ethers.Contract(rpsContractAddress, rpsAbi, signer);
+    let choiceConstant = await generateChoice(choice, rpsContract);
+    let gameidBignumber =convertToBignumber(gameid)
+    console.log(gameidBignumber)
+
+    try {
+      await rpsContract
+        .joinGame(gameidBignumber, choiceConstant, {
+          value: ethers.utils.parseEther(amount),
+        })
+        .then((res: any) => console.log(res));
+    } catch (err) {
+      console.log(err);
+    }
   };
 
   useEffect(() => {
     MetamaskConnection(null);
-    loadGames();
   }, [connection]);
 
   return (
@@ -124,6 +126,7 @@ export default function App() {
             account={account}
             balance={balance}
             createGame={createGame}
+            joinGame={joinGame}
           />
         </Route>
         <Redirect from="*" to="/" />
