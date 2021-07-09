@@ -9,4 +9,6 @@ export interface GAME {
   value: string;
   expireTime: string;
   id: number;
+  creator: string;
+  complete:boolean
 }

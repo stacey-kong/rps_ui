@@ -24,6 +24,7 @@ interface PlaygroundProps {
   balance: number | null;
   createGame: (choice: CHOICE, amount: string) => void;
   joinGame: (choice: CHOICE, amount: string, gameid: number) => void;
+  revealResult: (gameid: number) => void;
 }
 
 interface PopupProps {
@@ -45,10 +46,12 @@ export default function Playground(props: PlaygroundProps) {
   const [choice, setChoice] = useState<CHOICE>(CHOICE.NONE);
   const [games, setGames] = useState<GAME[] | null>(null);
   const [targetgame, setTargetGame] = useState<number | null>(null);
+  const [ownGame, setOwnGame] = useState<boolean>(false);
 
   const createGame = props.createGame;
 
   const joinGame = props.joinGame;
+  const revealResult = props.revealResult;
 
   const handleAmountChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     setAmount(event.target.value);
@@ -66,19 +69,6 @@ export default function Playground(props: PlaygroundProps) {
       }
       localStorage.setItem("choice", choice);
       createGame(choice, amount);
-    }
-    if (popup.type === PopupType.CREAT) {
-      if (+amount === 0) {
-        alert("Please imput a valid value");
-        return;
-      }
-      if (choice === CHOICE.NONE) {
-        alert("Please make your choice");
-        return;
-      }
-      localStorage.setItem("choice", choice);
-      createGame(choice, amount);
-      // window.location.reload();
     } else if (popup.type === PopupType.JOIN) {
       if (choice === CHOICE.NONE) {
         alert("Please make your choice");
@@ -87,14 +77,13 @@ export default function Playground(props: PlaygroundProps) {
       if (targetgame === null) {
         return;
       }
-      localStorage.setItem("choice", choice);
       joinGame(choice, amount, targetgame);
     }
   };
 
   const loadGames = async function () {
     const provider = new ethers.providers.Web3Provider(window.ethereum);
-    const rpsContractAddress = "0x5FbDB2315678afecb367f032d93F642f64180aa3";
+    const rpsContractAddress = "0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512";
     const rpsContract = new ethers.Contract(
       rpsContractAddress,
       rpsAbi,
@@ -106,16 +95,21 @@ export default function Playground(props: PlaygroundProps) {
     let games: GAME[] = [];
     for (let i = 1; i <= gameNum; i++) {
       let gameRaw = await rpsContract.games(i);
-      console.log(gameRaw)
+      console.log(gameRaw);
       let expireTime =
         +ethers.BigNumber.from(gameRaw.expireTime).toString() * 1000;
       let now = new Date();
-      if (expireTime > now.getTime()) {
+      if (expireTime > now.getTime() && !gameRaw.closed) {
         let game: GAME = {
           value: formatEther(gameRaw.dealerValue._hex),
           expireTime: formatDate(gameRaw.expireTime),
           id: formatNumber(gameRaw.gameId),
+          creator: gameRaw.dealer,
+          complete: gameRaw.playerChoice === 0 ? false : true,
         };
+        if (gameRaw.dealer === props.account) {
+          setOwnGame(true);
+        }
         games.push(game);
       }
     }
@@ -124,6 +118,7 @@ export default function Playground(props: PlaygroundProps) {
   };
 
   const joinRoom = function (amount: string, id: number) {
+    console.log("join");
     setAmount(amount);
     setPopup((prevState) => ({
       ...prevState,
@@ -157,26 +152,36 @@ export default function Playground(props: PlaygroundProps) {
             <ul className="gameList">
               {games
                 ? games.map((game: GAME, index) => (
-                    <li onClick={() => joinRoom(game.value, game.id)}>
+                    <li
+                      onClick={
+                        props.account === game.creator
+                          ? () => revealResult(game.id)
+                          : () => joinRoom(game.value, game.id)
+                      }
+                    >
                       <GameMedal
                         value={game.value}
                         expireTime={game.expireTime}
                         id={game.id}
+                        owned={props.account === game.creator ? true : false}
+                        complete={game.complete}
                         key={index}
                       />
                     </li>
                   ))
                 : "loading..."}
             </ul>
-            <div className="creatbtn">
-              <span
-                onClick={() => {
-                  setPopup((prevState) => ({ ...prevState, state: true }));
-                }}
-              >
-                Create Your Game
-              </span>
-            </div>
+            {!ownGame && (
+              <div className="creatbtn">
+                <span
+                  onClick={() => {
+                    setPopup((prevState) => ({ ...prevState, state: true }));
+                  }}
+                >
+                  Create Your Game
+                </span>
+              </div>
+            )}
           </div>
         )}
       </div>

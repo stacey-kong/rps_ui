@@ -4,15 +4,13 @@ import Playground from "./pages/Playground";
 import { useEffect, useState } from "react";
 import { ethers } from "ethers";
 import { rpsAbi } from "./abi/abis";
-import { soliditySha3 } from "web3-utils";
 import Crypto from "crypto";
 import { CHOICE } from "./enum";
 import { convertToBignumber } from "./utils";
 
-
 declare let window: any;
 const provider = new ethers.providers.Web3Provider(window.ethereum);
-const rpsContractAddress = "0x5FbDB2315678afecb367f032d93F642f64180aa3";
+const rpsContractAddress = "0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512";
 // const rpsContract = new ethers.Contract(rpsContractAddress, rpsAbi, provider);
 
 export default function App() {
@@ -41,7 +39,7 @@ export default function App() {
     MetamaskConnection(accounts);
   };
 
-  const generateChoice = async (choice: CHOICE, contract: any) => {
+  const generateChoice = async (choice: string, contract: any) => {
     let choiceConstant;
     switch (choice) {
       case CHOICE.ROCK:
@@ -61,13 +59,18 @@ export default function App() {
 
   const generateHash = async (choice: CHOICE, contract: any) => {
     let choiceConstant = await generateChoice(choice, contract);
+    console.log(choiceConstant);
 
     //checking
     if (account === null) return;
 
-    let randomSecret = Crypto.randomBytes(10).toString("base64").slice(0, 10);
-    localStorage.setItem("randomStr", randomSecret);
-    let dealerHash = soliditySha3(account, choiceConstant, randomSecret);
+    let randomSecret = Crypto.randomBytes(32);
+    let randomSecretStr = randomSecret.toString("base64");
+    localStorage.setItem("randomStr", randomSecretStr);
+    let dealerHash = ethers.utils.solidityKeccak256(
+      ["address", "uint8", "bytes32"],
+      [account, choiceConstant, randomSecret]
+    );
     return dealerHash;
   };
 
@@ -85,22 +88,45 @@ export default function App() {
         .then((res: any) => console.log(res));
     } catch (err) {
       console.log("fail to creat game");
-      console.log(err)
+      console.log(err);
     }
   };
 
-  const joinGame = async (choice: CHOICE, amount: string, gameid: number) => {
+  const joinGame = async (choice: string, amount: string, gameid: number) => {
     const signer = provider.getSigner();
     const rpsContract = new ethers.Contract(rpsContractAddress, rpsAbi, signer);
     let choiceConstant = await generateChoice(choice, rpsContract);
-    let gameidBignumber =convertToBignumber(gameid)
-    console.log(gameidBignumber)
+    let gameidBignumber = convertToBignumber(gameid);
+    console.log(gameidBignumber);
 
     try {
       await rpsContract
         .joinGame(gameidBignumber, choiceConstant, {
           value: ethers.utils.parseEther(amount),
         })
+        .then((res: any) => console.log(res));
+    } catch (err) {
+      console.log(err);
+    }
+  };
+  const revealResult = async (gameid: number) => {
+    console.log("revealode");
+
+    const signer = provider.getSigner();
+    const rpsContract = new ethers.Contract(rpsContractAddress, rpsAbi, signer);
+    let gameidBignumber = convertToBignumber(gameid);
+    let choice = localStorage.getItem("choice");
+    let choiceConstant = await generateChoice(choice!, rpsContract);
+    let randomStr = localStorage.getItem("randomStr");
+    let bytes32Randomstr = randomStr ? Buffer.from(randomStr, "base64") : "";
+    let revealhash = ethers.utils.solidityKeccak256(
+      ["address", "uint8", "bytes32"],
+      [account, choiceConstant, bytes32Randomstr]
+    );
+    console.log(revealhash);
+    try {
+      await rpsContract
+        .reveal(gameidBignumber, choiceConstant, bytes32Randomstr)
         .then((res: any) => console.log(res));
     } catch (err) {
       console.log(err);
@@ -127,6 +153,7 @@ export default function App() {
             balance={balance}
             createGame={createGame}
             joinGame={joinGame}
+            revealResult={revealResult}
           />
         </Route>
         <Redirect from="*" to="/" />

@@ -30,7 +30,13 @@ $text-color: white;
   display: flex;
   justify-content:space-around;
   margin-top: 5rem;
+  width: 100%;
   list-style: none;
+  box-sizing: border-box;
+  li{
+    width: 25%;
+    height: 8rem;
+  }
 }
 
 .popup {
