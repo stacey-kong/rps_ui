@@ -210,19 +210,16 @@ export default function Playground(props: PlaygroundProps) {
               className={`choice ${choice === CHOICE.ROCK ? "selected" : ""}`}
               id="rock"
               viewBox="0 0 200 450"
-              fill="pink"
-              stroke="rgb(131, 213, 228, 0.863)"
-              strokeWidth="10"
+
+              width="50"
+              height="50"
               strokeLinecap="round"
               onClick={() => setChoice(CHOICE.ROCK)}
             />
             <Paper
               className={`choice ${choice === CHOICE.PAPER ? "selected" : ""}`}
               id="paper"
-              viewBox="50 20 400 50"
-              fill="pink"
-              stroke="rgb(131, 213, 228, 0.863)"
-              strokeWidth="10"
+           
               strokeLinecap="round"
               onClick={() => setChoice(CHOICE.PAPER)}
             />
@@ -231,10 +228,7 @@ export default function Playground(props: PlaygroundProps) {
                 choice === CHOICE.SCISSORS ? "selected" : ""
               }`}
               id="scissors"
-              viewBox="250 80 400 200"
-              fill="pink"
-              stroke="rgb(131, 213, 228, 0.863)"
-              strokeWidth="10"
+   
               strokeLinecap="round"
               onClick={() => setChoice(CHOICE.SCISSORS)}
             />

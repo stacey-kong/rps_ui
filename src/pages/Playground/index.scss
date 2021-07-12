@@ -1,4 +1,4 @@
-$primary-color: rgb(66, 108, 128);
+$primary-color: rgb(58, 140, 146);
 $text-color: white;
 .userInfo {
   box-sizing: border-box;
@@ -7,6 +7,7 @@ $text-color: white;
   padding: 0 2rem;
   h1 {
     width: 100%;
+    color: $primary-color;
   }
   .account {
     box-sizing: border-box;
@@ -52,15 +53,21 @@ $text-color: white;
   .choices {
     display: flex;
     justify-content: center;
-    width: 100%;
-    height: 20%;
+    width: auto !important;
+    height: auto !important;
+    margin-top: 2rem;
     .choice {
       height: 100%;
+      padding: 0 0 0.5rem;
+      box-sizing: border-box;
       width: 10%;
       margin: 0 2rem;
+      fill: palevioletred;
     }
     .choice.selected {
-      border: cadetblue 2px solid;
+      fill: rgb(58, 140, 146);
+      position: relative;
+      bottom: 20px;
     }
   }
   .submitBtn {
