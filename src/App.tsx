@@ -19,6 +19,9 @@ export default function App() {
   const [connection, setConnection] = useState<boolean>(false);
   // const [contract, setContract] = useState<any>(null);
 
+  window.ethereum.on("accountsChanged", (accounts: string[]) =>
+    MetamaskConnection(accounts)
+  );
   //detect whether there is and account connected
   const MetamaskConnection = async function (Accounts: string[] | null) {
     const accounts = Accounts ?? (await provider.listAccounts());
