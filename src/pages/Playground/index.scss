@@ -26,16 +26,17 @@ $text-color: white;
   margin-top: 8rem;
 }
 
-.gameList{
+.gameList {
   display: flex;
-  justify-content:space-around;
+  justify-content: space-around;
   margin-top: 5rem;
   width: 100%;
   list-style: none;
   box-sizing: border-box;
-  li{
-    width: 25%;
-    height: 8rem;
+  padding: 0;
+  li {
+    width: 20%;
+    height: min-content;
   }
 }
 
@@ -58,7 +59,7 @@ $text-color: white;
       width: 10%;
       margin: 0 2rem;
     }
-    .choice.selected{
+    .choice.selected {
       border: cadetblue 2px solid;
     }
   }

@@ -1,12 +1,44 @@
-.medal{
-    background-color: rgba(228, 127, 161, 0.438);
-    border-radius: 10px;
-    color: beige;
-    padding: 0.2rem 0.5rem;
-    width: 100%;
-    height: 100%;
+.medal {
+  background-color: rgba(228, 127, 161, 0.438);
+  border-radius: 10px;
+  color: beige;
+  padding: 1rem 0.5rem;
+  width: 100%;
+  height: 100%;
+  justify-content: space-around;
 
-    .revealBtn{
-        padding: 0;
+  
+  .creatorSticker {
+    float: left;
+    clear: right;
+  }
+
+  .title {
+    font-size: 2rem;
+    display: flex;
+    width: 100%;
+    justify-content: space-around;
+    margin: 1rem 0;
+  }
+
+
+  table {
+    width: 100%;
+    justify-content: space-around;
+    th {
+      text-align: start;
     }
+    td {
+      text-align: end;
+    }
+  }
+  .revealBtn {
+    padding: 0;
+  }
+}
+
+.medal.own {
+  background-color: rgba(167, 212, 255, 0.438);
+  color: rgb(116, 167, 197);
+  font-weight: bolder;
 }

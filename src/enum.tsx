@@ -7,7 +7,7 @@ export enum CHOICE {
 
 export interface GAME {
   value: string;
-  expireTime: string;
+  expireTime: number;
   id: number;
   creator: string;
   complete:boolean
