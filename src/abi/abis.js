@@ -1,5 +1,10 @@
 export const rpsAbi = [
   {
+    inputs: [],
+    stateMutability: "nonpayable",
+    type: "constructor",
+  },
+  {
     anonymous: false,
     inputs: [
       {
@@ -223,6 +228,25 @@ export const rpsAbi = [
         type: "uint256",
       },
     ],
+    name: "claim",
+    outputs: [
+      {
+        internalType: "bool",
+        name: "",
+        type: "bool",
+      },
+    ],
+    stateMutability: "nonpayable",
+    type: "function",
+  },
+  {
+    inputs: [
+      {
+        internalType: "uint256",
+        name: "gameid",
+        type: "uint256",
+      },
+    ],
     name: "close",
     outputs: [
       {
@@ -254,8 +278,46 @@ export const rpsAbi = [
     type: "function",
   },
   {
+    inputs: [
+      {
+        internalType: "uint256",
+        name: "gameId",
+        type: "uint256",
+      },
+    ],
+    name: "deleteGame",
+    outputs: [
+      {
+        internalType: "bool",
+        name: "success",
+        type: "bool",
+      },
+    ],
+    stateMutability: "nonpayable",
+    type: "function",
+  },
+  {
     inputs: [],
     name: "expireTimeLimit",
+    outputs: [
+      {
+        internalType: "uint256",
+        name: "",
+        type: "uint256",
+      },
+    ],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [
+      {
+        internalType: "uint256",
+        name: "",
+        type: "uint256",
+      },
+    ],
+    name: "gameList",
     outputs: [
       {
         internalType: "uint256",
@@ -300,6 +362,11 @@ export const rpsAbi = [
     ],
     name: "games",
     outputs: [
+      {
+        internalType: "uint256",
+        name: "listPointer",
+        type: "uint256",
+      },
       {
         internalType: "uint256",
         name: "gameId",
@@ -360,6 +427,32 @@ export const rpsAbi = [
     type: "function",
   },
   {
+    inputs: [],
+    name: "getAllGames",
+    outputs: [
+      {
+        internalType: "uint256[]",
+        name: "",
+        type: "uint256[]",
+      },
+    ],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [],
+    name: "getGameCount",
+    outputs: [
+      {
+        internalType: "uint256",
+        name: "gameCount",
+        type: "uint256",
+      },
+    ],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
     inputs: [
       {
         internalType: "address",
@@ -386,6 +479,25 @@ export const rpsAbi = [
       },
     ],
     stateMutability: "pure",
+    type: "function",
+  },
+  {
+    inputs: [
+      {
+        internalType: "uint256",
+        name: "gameId",
+        type: "uint256",
+      },
+    ],
+    name: "isGame",
+    outputs: [
+      {
+        internalType: "bool",
+        name: "isIndeed",
+        type: "bool",
+      },
+    ],
+    stateMutability: "view",
     type: "function",
   },
   {
