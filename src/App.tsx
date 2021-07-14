@@ -62,33 +62,45 @@ export default function App() {
 
   const generateHash = async (choice: CHOICE, contract: any) => {
     let choiceConstant = await generateChoice(choice, contract);
-    console.log(choiceConstant);
 
     //checking
     if (account === null) return;
 
     let randomSecret = Crypto.randomBytes(32);
     let randomSecretStr = randomSecret.toString("base64");
-    localStorage.setItem("randomStr", randomSecretStr);
     let dealerHash = ethers.utils.solidityKeccak256(
       ["address", "uint8", "bytes32"],
       [account, choiceConstant, randomSecret]
     );
-    return dealerHash;
+    let dealerInfo = {
+      randomSecretStr,
+      dealerHash,
+    };
+    return dealerInfo;
   };
 
   const createGame = async (choice: CHOICE, amount: string) => {
     const signer = provider.getSigner();
     const rpsContract = new ethers.Contract(rpsContractAddress, rpsAbi, signer);
     // setContract(rpsContract);
-    let dealerhash = await generateHash(choice, rpsContract);
-    console.log(dealerhash);
+    let dealerInfo = await generateHash(choice, rpsContract);
+    let dealerHash = dealerInfo?.dealerHash;
+    let randomStr = dealerInfo?.randomSecretStr;
+
     try {
-      await rpsContract
-        .createGame(dealerhash, {
-          value: ethers.utils.parseEther(amount),
-        })
-        .then((res: any) => console.log(res));
+      let tx = await rpsContract.createGame(dealerHash, {
+        value: ethers.utils.parseEther(amount),
+      });
+      let res = await formatResponse(tx);
+      let gameId = formatNumber(res!);
+      console.log(gameId);
+      let gameDetails = {
+        gameId,
+        randomStr,
+        choice,
+      };
+      localStorage.setItem(`${gameId}`, JSON.stringify(gameDetails));
+      window.location.reload();
     } catch (err) {
       console.log("fail to creat game");
       console.log(err);
