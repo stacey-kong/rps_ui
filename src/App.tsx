@@ -2,11 +2,16 @@ import { HashRouter, Route, Switch, Redirect } from "react-router-dom";
 import Dashboard from "./pages/Dashboard";
 import Playground from "./pages/Playground";
 import { useEffect, useState } from "react";
-import { ethers } from "ethers";
+import { BigNumber, ethers } from "ethers";
 import { rpsAbi } from "./abi/abis";
 import Crypto from "crypto";
-import { CHOICE } from "./enum";
-import { convertToBignumber } from "./utils";
+import { CHOICE, contractAddress, RESULT } from "./enum";
+import {
+  convertToBignumber,
+  formatNumber,
+  formatEther,
+  formatResponse,
+} from "./utils";
 
 declare let window: any;
 const provider = new ethers.providers.Web3Provider(window.ethereum);
@@ -125,24 +130,50 @@ export default function App() {
     }
   };
   const revealResult = async (gameid: number) => {
-    console.log("revealode");
-
     const signer = provider.getSigner();
     const rpsContract = new ethers.Contract(rpsContractAddress, rpsAbi, signer);
+    let gameDetailsRaw = localStorage.getItem(`${gameid}`);
+    const gameDetails = gameDetailsRaw ? JSON.parse(gameDetailsRaw) : "";
     let gameidBignumber = convertToBignumber(gameid);
-    let choice = localStorage.getItem("choice");
+    let choice = gameDetails.choice;
     let choiceConstant = await generateChoice(choice!, rpsContract);
-    let randomStr = localStorage.getItem("randomStr");
+    let randomStr = gameDetails.randomStr;
     let bytes32Randomstr = randomStr ? Buffer.from(randomStr, "base64") : "";
-    let revealhash = ethers.utils.solidityKeccak256(
-      ["address", "uint8", "bytes32"],
-      [account, choiceConstant, bytes32Randomstr]
-    );
-    console.log(revealhash);
+    // let revealhash = ethers.utils.solidityKeccak256(
+    //   ["address", "uint8", "bytes32"],
+    //   [account, choiceConstant, bytes32Randomstr]
+    // );
     try {
-      await rpsContract
-        .reveal(gameidBignumber, choiceConstant, bytes32Randomstr)
-        .then((res: any) => console.log(res));
+     await rpsContract.revealGame(
+        gameidBignumber,
+        choiceConstant,
+        bytes32Randomstr
+      );
+
+      rpsContract
+        .on(
+          "CloseGame",
+          async function (
+            gameid: ethers.BigNumber,
+            dealer: string,
+            player: string,
+            result: ethers.BigNumber
+          ) {
+            localStorage.removeItem(`${gameid}`);
+
+            switch (formatNumber(result)) {
+              case RESULT.DRAW:
+                alert("This is a draw!");
+                break;
+              case RESULT.DEALERWIN:
+                alert("Congrats! You win a game");
+                break;
+              case RESULT.PLAYERWIN:
+                alert("Opps, you lose a game");
+            }
+          }
+        )
+        .on("error", console.error);
     } catch (err) {
       console.log(err);
     }
