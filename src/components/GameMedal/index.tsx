@@ -39,7 +39,11 @@ export default function GameMedal(props: GameMedalProps) {
             {props.owned && (
               <tr>
                 <th>Status:</th>
-                <td>Waitting player to join</td>
+                <td>
+                  {props.complete
+                    ? "Waitting reveal"
+                    : "Waitting player to join"}
+                </td>
               </tr>
             )}
             <tr>

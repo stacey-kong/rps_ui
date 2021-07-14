@@ -66,7 +66,6 @@ export default function Playground(props: PlaygroundProps) {
         alert("Please make your choice");
         return;
       }
-      localStorage.setItem("choice", choice);
       createGame(choice, amount);
     } else if (popup.type === PopupType.JOIN) {
       if (choice === CHOICE.NONE) {
@@ -82,7 +81,7 @@ export default function Playground(props: PlaygroundProps) {
 
   const loadGames = async function () {
     const provider = new ethers.providers.Web3Provider(window.ethereum);
-    const rpsContractAddress = "0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512";
+    const rpsContractAddress = contractAddress;
     const rpsContract = new ethers.Contract(
       rpsContractAddress,
       rpsAbi,
@@ -134,11 +133,29 @@ export default function Playground(props: PlaygroundProps) {
     loadGames();
   }, []);
 
+  const handelMedalClick = function (
+    complete: boolean,
+    own: boolean,
+    amount: string,
+    id: number
+  ) {
+    if (!own) {
+      joinRoom(amount, id);
+    } else if (own) {
+      if (!complete) {
+        alert("Waitthing other player to join");
+      }
+      if (complete) {
+        revealResult(id);
+      }
+    }
+  };
+
   return (
     <>
       <div className="container">
         <div className="userInfo">
-          <h1>Playground</h1>
+          <h1>PLAYGROUND</h1>
           <div className="account">
             <p>
               Account:
@@ -155,10 +172,14 @@ export default function Playground(props: PlaygroundProps) {
               {games
                 ? games.map((game: GAME, index) => (
                     <li
-                      onClick={
-                        props.account === game.creator
-                          ? () => revealResult(game.id)
-                          : () => joinRoom(game.value, game.id)
+                      key={index}
+                      onClick={() =>
+                        handelMedalClick(
+                          game.complete,
+                          props.account === game.creator ? true : false,
+                          game.value,
+                          game.id
+                        )
                       }
                     >
                       <GameMedal
