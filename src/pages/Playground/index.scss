@@ -29,6 +29,7 @@ $text-color: white;
 
 .gameList {
   display: flex;
+  flex-wrap: wrap;
   justify-content: space-around;
   margin-top: 5rem;
   width: 100%;
@@ -37,6 +38,7 @@ $text-color: white;
   padding: 0;
   li {
     width: 20%;
+    margin: 2%;
     height: min-content;
   }
 }
