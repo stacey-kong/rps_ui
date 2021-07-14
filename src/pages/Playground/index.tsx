@@ -8,7 +8,7 @@ import { ReactComponent as Eth } from "../../assets/svg/eth.svg";
 import { ReactComponent as Rock } from "../../assets/svg/rock.svg";
 import { ReactComponent as Paper } from "../../assets/svg/paper.svg";
 import { ReactComponent as Scissors } from "../../assets/svg/scissors.svg";
-import { CHOICE, GAME } from "../../enum";
+import { CHOICE, GAME, contractAddress } from "../../enum";
 import { formatEther, formatNumber, formatDate } from "../../utils";
 import { ethers } from "ethers";
 import { rpsAbi } from "../../abi/abis";
@@ -46,10 +46,9 @@ export default function Playground(props: PlaygroundProps) {
   const [choice, setChoice] = useState<CHOICE>(CHOICE.NONE);
   const [games, setGames] = useState<GAME[] | null>(null);
   const [targetgame, setTargetGame] = useState<number | null>(null);
-  const [ownGame, setOwnGame] = useState<boolean>(false);
+  const [placeholder, setPlacehoder] = useState<string>("Loading");
 
   const createGame = props.createGame;
-
   const joinGame = props.joinGame;
   const revealResult = props.revealResult;
 
@@ -89,12 +88,12 @@ export default function Playground(props: PlaygroundProps) {
       rpsAbi,
       provider
     );
-    const GameNum = await rpsContract.maxgame();
-    const gameNum = formatNumber(GameNum);
-
+    const gameList = await rpsContract.getAllGames();
     let games: GAME[] = [];
-    for (let i = 1; i <= gameNum; i++) {
-      let gameRaw = await rpsContract.games(i);
+
+    for (let i = 0; i < gameList.length; i++) {
+      let gameid = gameList[i];
+      let gameRaw = await rpsContract.games(gameid);
       console.log(gameRaw);
       let expireTime =
         +ethers.BigNumber.from(gameRaw.expireTime).toString() * 1000;
@@ -102,18 +101,21 @@ export default function Playground(props: PlaygroundProps) {
       if (expireTime > now.getTime() && !gameRaw.closed) {
         let game: GAME = {
           value: formatEther(gameRaw.dealerValue._hex),
-          expireTime: formatDate(gameRaw.expireTime),
+          expireTime: formatNumber(gameRaw.expireTime),
           id: formatNumber(gameRaw.gameId),
           creator: gameRaw.dealer,
           complete: gameRaw.playerChoice === 0 ? false : true,
         };
-        if (gameRaw.dealer === props.account) {
-          setOwnGame(true);
-        }
         games.push(game);
       }
     }
-    // console.log(games);
+    if (games.length === 0) {
+      setPlacehoder(
+        `No avaliable games now. Click "Create" to create your own game!`
+      );
+      return
+    }
+    console.log(games);
     setGames(games);
   };
 
@@ -165,15 +167,15 @@ export default function Playground(props: PlaygroundProps) {
                         id={game.id}
                         owned={props.account === game.creator ? true : false}
                         complete={game.complete}
-                        key={index}
                       />
                     </li>
                   ))
-                : "loading..."}
+                : placeholder}
             </ul>
-            {!ownGame && (
+            {
               <div className="creatbtn">
                 <span
+                  className="button"
                   onClick={() => {
                     setPopup((prevState) => ({ ...prevState, state: true }));
                   }}
@@ -181,7 +183,7 @@ export default function Playground(props: PlaygroundProps) {
                   Create Your Game
                 </span>
               </div>
-            )}
+            }
           </div>
         )}
       </div>
@@ -210,7 +212,6 @@ export default function Playground(props: PlaygroundProps) {
               className={`choice ${choice === CHOICE.ROCK ? "selected" : ""}`}
               id="rock"
               viewBox="0 0 200 450"
-
               width="50"
               height="50"
               strokeLinecap="round"
@@ -219,7 +220,6 @@ export default function Playground(props: PlaygroundProps) {
             <Paper
               className={`choice ${choice === CHOICE.PAPER ? "selected" : ""}`}
               id="paper"
-           
               strokeLinecap="round"
               onClick={() => setChoice(CHOICE.PAPER)}
             />
@@ -228,7 +228,6 @@ export default function Playground(props: PlaygroundProps) {
                 choice === CHOICE.SCISSORS ? "selected" : ""
               }`}
               id="scissors"
-   
               strokeLinecap="round"
               onClick={() => setChoice(CHOICE.SCISSORS)}
             />
