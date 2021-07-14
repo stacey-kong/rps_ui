@@ -246,6 +246,11 @@ export const rpsAbi = [
         name: "gameid",
         type: "uint256",
       },
+      {
+        internalType: "uint8",
+        name: "result",
+        type: "uint8",
+      },
     ],
     name: "close",
     outputs: [
@@ -540,14 +545,14 @@ export const rpsAbi = [
   {
     inputs: [
       {
-        internalType: "uint256",
+        internalType: "uint8",
         name: "",
-        type: "uint256",
+        type: "uint8",
       },
       {
-        internalType: "uint256",
+        internalType: "uint8",
         name: "",
-        type: "uint256",
+        type: "uint8",
       },
     ],
     name: "payoff",
@@ -579,7 +584,7 @@ export const rpsAbi = [
         type: "bytes32",
       },
     ],
-    name: "reveal",
+    name: "revealGame",
     outputs: [
       {
         internalType: "bool",

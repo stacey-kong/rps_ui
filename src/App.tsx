@@ -15,8 +15,7 @@ import {
 
 declare let window: any;
 const provider = new ethers.providers.Web3Provider(window.ethereum);
-const rpsContractAddress = "0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512";
-// const rpsContract = new ethers.Contract(rpsContractAddress, rpsAbi, provider);
+const rpsContractAddress = contractAddress;
 
 export default function App() {
   const [account, setAccount] = useState<string | null>(null);
@@ -24,13 +23,13 @@ export default function App() {
   const [connection, setConnection] = useState<boolean>(false);
   // const [contract, setContract] = useState<any>(null);
 
+  //metamask event detection
   window.ethereum.on("accountsChanged", (accounts: string[]) =>
     MetamaskConnection(accounts)
   );
   //detect whether there is and account connected
   const MetamaskConnection = async function (Accounts: string[] | null) {
     const accounts = Accounts ?? (await provider.listAccounts());
-    console.log(accounts);
     if (accounts.length === 0) return;
     setConnection(true);
     setAccount(accounts[0]);
