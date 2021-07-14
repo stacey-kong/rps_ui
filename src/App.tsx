@@ -117,14 +117,12 @@ export default function App() {
     const rpsContract = new ethers.Contract(rpsContractAddress, rpsAbi, signer);
     let choiceConstant = await generateChoice(choice, rpsContract);
     let gameidBignumber = convertToBignumber(gameid);
-    console.log(gameidBignumber);
-
     try {
       await rpsContract
         .joinGame(gameidBignumber, choiceConstant, {
           value: ethers.utils.parseEther(amount),
         })
-        .then((res: any) => console.log(res));
+    window.location.reload()
     } catch (err) {
       console.log(err);
     }
