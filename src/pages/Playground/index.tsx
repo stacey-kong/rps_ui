@@ -112,7 +112,7 @@ export default function Playground(props: PlaygroundProps) {
       setPlacehoder(
         `No avaliable games now. Click "Create" to create your own game!`
       );
-      return
+      return;
     }
     console.log(games);
     setGames(games);

@@ -16,6 +16,8 @@ import {
 declare let window: any;
 const provider = new ethers.providers.Web3Provider(window.ethereum);
 const rpsContractAddress = contractAddress;
+console.log(contractAddress);
+let gas_limit = 0x100000;
 
 export default function App() {
   const [account, setAccount] = useState<string | null>(null);
@@ -27,15 +29,17 @@ export default function App() {
   window.ethereum.on("accountsChanged", (accounts: string[]) =>
     MetamaskConnection(accounts)
   );
+
+  window.ethereum.on("disconnect", () => setConnection(false));
+
   //detect whether there is and account connected
   const MetamaskConnection = async function (Accounts: string[] | null) {
     const accounts = Accounts ?? (await provider.listAccounts());
     if (accounts.length === 0) return;
-    setConnection(true);
-    setAccount(accounts[0]);
-
     const balance = await provider.getBalance(accounts[0]);
     setBalance(+ethers.utils.formatEther(balance));
+    setConnection(true);
+    setAccount(accounts[0]);
   };
 
   //if no account is connected, click to ask for authorization
@@ -90,7 +94,6 @@ export default function App() {
     let dealerInfo = await generateHash(choice, rpsContract);
     let dealerHash = dealerInfo?.dealerHash;
     let randomStr = dealerInfo?.randomSecretStr;
-
     try {
       let tx = await rpsContract.createGame(dealerHash, {
         value: ethers.utils.parseEther(amount),
@@ -117,11 +120,10 @@ export default function App() {
     let choiceConstant = await generateChoice(choice, rpsContract);
     let gameidBignumber = convertToBignumber(gameid);
     try {
-      await rpsContract
-        .joinGame(gameidBignumber, choiceConstant, {
-          value: ethers.utils.parseEther(amount),
-        })
-    window.location.reload()
+      await rpsContract.joinGame(gameidBignumber, choiceConstant, {
+        value: ethers.utils.parseEther(amount),
+      });
+      window.location.reload();
     } catch (err) {
       console.log(err);
     }
@@ -136,12 +138,13 @@ export default function App() {
     let choiceConstant = await generateChoice(choice!, rpsContract);
     let randomStr = gameDetails.randomStr;
     let bytes32Randomstr = randomStr ? Buffer.from(randomStr, "base64") : "";
+
     // let revealhash = ethers.utils.solidityKeccak256(
     //   ["address", "uint8", "bytes32"],
     //   [account, choiceConstant, bytes32Randomstr]
     // );
     try {
-     await rpsContract.revealGame(
+      await rpsContract.revealGame(
         gameidBignumber,
         choiceConstant,
         bytes32Randomstr
@@ -190,15 +193,17 @@ export default function App() {
             <Dashboard onClick={loadBlockchainData} />
           )}
         </Route>
-        <Route path="/playground">
-          <Playground
-            account={account}
-            balance={balance}
-            createGame={createGame}
-            joinGame={joinGame}
-            revealResult={revealResult}
-          />
-        </Route>
+        {connection && (
+          <Route path="/playground">
+            <Playground
+              account={account}
+              balance={balance}
+              createGame={createGame}
+              joinGame={joinGame}
+              revealResult={revealResult}
+            />
+          </Route>
+        )}
         <Redirect from="*" to="/" />
       </Switch>
     </HashRouter>

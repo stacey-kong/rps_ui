@@ -48,7 +48,6 @@ export const formatDate = function (time: ethers.BigNumber) {
 };
 
 export const formatResponse = async function (res: any) {
-
   //wait 2 blocks for transaction confirmation
   let receipt = await res.wait(1);
   // console.log(`receipt:${JSON.stringify(receipt)}`)
