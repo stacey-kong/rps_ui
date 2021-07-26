@@ -58,7 +58,7 @@ export default function Web3ContextProvider(props: Props) {
       console.log(accounts);
       if (accounts?.length === 0) return;
       setAccount(accounts[0]);
-      localStorage.setItem("account", accounts[0]);
+      localStorage.setItem("account", JSON.stringify(accounts[0]));
       getAccountDetails();
     } catch (error) {
       console.error(error);
@@ -73,7 +73,7 @@ export default function Web3ContextProvider(props: Props) {
       let accounts = await provider.listAccounts();
       if (accounts.length !== 0) {
         setAccount(accounts[0]);
-        localStorage.setItem("account", accounts[0]);
+        localStorage.setItem("account", JSON.stringify(accounts[0]));
       }
     }
   }
