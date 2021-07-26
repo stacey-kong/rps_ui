@@ -1,4 +1,7 @@
+import { ethers } from "ethers";
+import Crypto from "crypto";
 import { useEffect, useState } from "react";
+import { useWeb3Context } from "../../context/web3";
 import GameMedal from "../../components/GameMedal";
 import FormControl from "@material-ui/core/FormControl";
 import InputLabel from "@material-ui/core/InputLabel";
@@ -8,25 +11,22 @@ import { ReactComponent as Eth } from "../../assets/svg/eth.svg";
 import { ReactComponent as Rock } from "../../assets/svg/rock.svg";
 import { ReactComponent as Paper } from "../../assets/svg/paper.svg";
 import { ReactComponent as Scissors } from "../../assets/svg/scissors.svg";
-import { CHOICE, GAME, contractAddress } from "../../enum";
-import { formatEther, formatNumber, formatDate } from "../../utils";
-import { ethers } from "ethers";
-import { rpsAbi } from "../../abi/abis";
+import { CHOICE, RESULT, GAME, contractAddress } from "../../enum";
+import {
+  formatEther,
+  convertToBignumber,
+  formatNumber,
+  formatResponse,
+  formatDate,
+} from "../../utils";
 
+import { rpsAbi } from "../../abi/abis";
 import "./index.scss";
 
 enum PopupType {
   CREAT = "CREAT",
   JOIN = "JOIN",
 }
-interface PlaygroundProps {
-  account: string | null;
-  balance: number | null;
-  createGame: (choice: CHOICE, amount: string) => void;
-  joinGame: (choice: CHOICE, amount: string, gameid: number) => void;
-  revealResult: (gameid: number) => void;
-}
-
 interface PopupProps {
   state: boolean;
   type: PopupType;
@@ -40,17 +40,137 @@ const initialpopup = {
 
 // const Game: Map<number, GAME> = new Map();
 
-export default function Playground(props: PlaygroundProps) {
+export default function Playground() {
   const [popup, setPopup] = useState<PopupProps>(initialpopup);
   const [amount, setAmount] = useState<string>("0");
   const [choice, setChoice] = useState<CHOICE>(CHOICE.NONE);
   const [games, setGames] = useState<GAME[] | null>(null);
   const [targetgame, setTargetGame] = useState<number | null>(null);
   const [placeholder, setPlacehoder] = useState<string>("Loading");
+  const { account, balance, contract } = useWeb3Context();
 
-  const createGame = props.createGame;
-  const joinGame = props.joinGame;
-  const revealResult = props.revealResult;
+  const generateChoice = async (choice: string, contract: any) => {
+    let choiceConstant;
+    switch (choice) {
+      case CHOICE.ROCK:
+        choiceConstant = await contract.ROCK();
+        break;
+      case CHOICE.PAPER:
+        choiceConstant = await contract.PAPER();
+        break;
+      case CHOICE.SCISSORS:
+        choiceConstant = await contract.SCISSORS();
+        break;
+      default:
+        choiceConstant = await contract.NONE();
+    }
+    return choiceConstant;
+  };
+
+  const generateHash = async (choice: CHOICE, contract: any) => {
+    let choiceConstant = await generateChoice(choice, contract);
+
+    //checking
+    if (account === null) return;
+
+    let randomSecret = Crypto.randomBytes(32);
+    let randomSecretStr = randomSecret.toString("base64");
+    let dealerHash = ethers.utils.solidityKeccak256(
+      ["address", "uint8", "bytes32"],
+      [account, choiceConstant, randomSecret]
+    );
+    let dealerInfo = {
+      randomSecretStr,
+      dealerHash,
+    };
+    return dealerInfo;
+  };
+
+  const createGame = async (choice: CHOICE, amount: string) => {
+    let dealerInfo = await generateHash(choice, contract);
+    let dealerHash = dealerInfo?.dealerHash;
+    let randomStr = dealerInfo?.randomSecretStr;
+    if (contract === null) return;
+    try {
+      let tx = await contract.createGame(dealerHash, {
+        value: ethers.utils.parseEther(amount),
+      });
+      let res = await formatResponse(tx);
+      let gameId = formatNumber(res!);
+      console.log(gameId);
+      let gameDetails = {
+        gameId,
+        randomStr,
+        choice,
+      };
+      localStorage.setItem(`${gameId}`, JSON.stringify(gameDetails));
+      window.location.reload();
+    } catch (err) {
+      console.log("fail to creat game");
+      console.log(err);
+    }
+  };
+
+  const joinGame = async (choice: string, amount: string, gameid: number) => {
+    let choiceConstant = await generateChoice(choice, contract);
+    let gameidBignumber = convertToBignumber(gameid);
+    if (contract === null) return;
+
+    try {
+      await contract.joinGame(gameidBignumber, choiceConstant, {
+        value: ethers.utils.parseEther(amount),
+      });
+      window.location.reload();
+    } catch (err) {
+      console.log(err);
+    }
+  };
+
+  const revealResult = async (gameid: number) => {
+    let gameDetailsRaw = localStorage.getItem(`${gameid}`);
+    const gameDetails = gameDetailsRaw ? JSON.parse(gameDetailsRaw) : "";
+    let gameidBignumber = convertToBignumber(gameid);
+    let choice = gameDetails.choice;
+    let choiceConstant = await generateChoice(choice!, contract);
+    let randomStr = gameDetails.randomStr;
+    let bytes32Randomstr = randomStr ? Buffer.from(randomStr, "base64") : "";
+
+    if (contract === null) return;
+
+    try {
+      await contract.revealGame(
+        gameidBignumber,
+        choiceConstant,
+        bytes32Randomstr
+      );
+      contract
+        .on(
+          "CloseGame",
+          async function (
+            gameid: ethers.BigNumber,
+            dealer: string,
+            player: string,
+            result: ethers.BigNumber
+          ) {
+            localStorage.removeItem(`${gameid}`);
+
+            switch (formatNumber(result)) {
+              case RESULT.DRAW:
+                alert("This is a draw!");
+                break;
+              case RESULT.DEALERWIN:
+                alert("Congrats! You win a game");
+                break;
+              case RESULT.PLAYERWIN:
+                alert("Opps, you lose a game");
+            }
+          }
+        )
+        .on("error", console.error);
+    } catch (err) {
+      console.log(err);
+    }
+  };
 
   const handleAmountChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     setAmount(event.target.value);
@@ -160,9 +280,9 @@ export default function Playground(props: PlaygroundProps) {
             <p>
               Account:
               <br />
-              {`${props.account?.slice(0, 5)}...${props.account?.slice(-4)}`}
+              {`${account?.slice(0, 5)}...${account?.slice(-4)}`}
             </p>
-            <p>Balance: {props.balance?.toFixed(2)} ETH</p>
+            <p>Balance: {balance?.toFixed(2)} ETH</p>
           </div>
         </div>
 
@@ -176,7 +296,7 @@ export default function Playground(props: PlaygroundProps) {
                       onClick={() =>
                         handelMedalClick(
                           game.complete,
-                          props.account === game.creator ? true : false,
+                          account === game.creator ? true : false,
                           game.value,
                           game.id
                         )
@@ -186,7 +306,7 @@ export default function Playground(props: PlaygroundProps) {
                         value={game.value}
                         expireTime={game.expireTime}
                         id={game.id}
-                        owned={props.account === game.creator ? true : false}
+                        owned={account === game.creator ? true : false}
                         complete={game.complete}
                       />
                     </li>
