@@ -10,7 +10,26 @@ export const rpsAbi = [
       {
         indexed: false,
         internalType: "uint256",
-        name: "gameid",
+        name: "gameId",
+        type: "uint256",
+      },
+      {
+        indexed: false,
+        internalType: "address",
+        name: "caller",
+        type: "address",
+      },
+    ],
+    name: "ClaimGame",
+    type: "event",
+  },
+  {
+    anonymous: false,
+    inputs: [
+      {
+        indexed: false,
+        internalType: "uint256",
+        name: "gameId",
         type: "uint256",
       },
       {
@@ -41,7 +60,7 @@ export const rpsAbi = [
       {
         indexed: false,
         internalType: "uint256",
-        name: "gameid",
+        name: "gameId",
         type: "uint256",
       },
       {
@@ -66,7 +85,7 @@ export const rpsAbi = [
       {
         indexed: false,
         internalType: "uint256",
-        name: "gameid",
+        name: "gameId",
         type: "uint256",
       },
       {
@@ -91,7 +110,7 @@ export const rpsAbi = [
       {
         indexed: false,
         internalType: "uint256",
-        name: "gameid",
+        name: "gameId",
         type: "uint256",
       },
       {
@@ -104,6 +123,12 @@ export const rpsAbi = [
         indexed: false,
         internalType: "uint8",
         name: "choice",
+        type: "uint8",
+      },
+      {
+        indexed: false,
+        internalType: "uint8",
+        name: "result",
         type: "uint8",
       },
     ],
@@ -204,62 +229,13 @@ export const rpsAbi = [
   {
     inputs: [
       {
-        internalType: "uint8",
-        name: "choice",
-        type: "uint8",
-      },
-    ],
-    name: "checkChoice",
-    outputs: [
-      {
-        internalType: "bool",
-        name: "",
-        type: "bool",
-      },
-    ],
-    stateMutability: "pure",
-    type: "function",
-  },
-  {
-    inputs: [
-      {
         internalType: "uint256",
-        name: "gameid",
+        name: "gameId",
         type: "uint256",
       },
     ],
-    name: "claim",
-    outputs: [
-      {
-        internalType: "bool",
-        name: "",
-        type: "bool",
-      },
-    ],
-    stateMutability: "nonpayable",
-    type: "function",
-  },
-  {
-    inputs: [
-      {
-        internalType: "uint256",
-        name: "gameid",
-        type: "uint256",
-      },
-      {
-        internalType: "uint8",
-        name: "result",
-        type: "uint8",
-      },
-    ],
-    name: "close",
-    outputs: [
-      {
-        internalType: "bool",
-        name: "",
-        type: "bool",
-      },
-    ],
+    name: "claimGame",
+    outputs: [],
     stateMutability: "nonpayable",
     type: "function",
   },
@@ -283,46 +259,8 @@ export const rpsAbi = [
     type: "function",
   },
   {
-    inputs: [
-      {
-        internalType: "uint256",
-        name: "gameId",
-        type: "uint256",
-      },
-    ],
-    name: "deleteGame",
-    outputs: [
-      {
-        internalType: "bool",
-        name: "success",
-        type: "bool",
-      },
-    ],
-    stateMutability: "nonpayable",
-    type: "function",
-  },
-  {
     inputs: [],
     name: "expireTimeLimit",
-    outputs: [
-      {
-        internalType: "uint256",
-        name: "",
-        type: "uint256",
-      },
-    ],
-    stateMutability: "view",
-    type: "function",
-  },
-  {
-    inputs: [
-      {
-        internalType: "uint256",
-        name: "",
-        type: "uint256",
-      },
-    ],
-    name: "gameList",
     outputs: [
       {
         internalType: "uint256",
@@ -346,7 +284,26 @@ export const rpsAbi = [
         type: "uint256",
       },
     ],
-    name: "gameidsOf",
+    name: "gameIdsOf",
+    outputs: [
+      {
+        internalType: "uint256",
+        name: "",
+        type: "uint256",
+      },
+    ],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [
+      {
+        internalType: "uint256",
+        name: "",
+        type: "uint256",
+      },
+    ],
+    name: "gameList",
     outputs: [
       {
         internalType: "uint256",
@@ -460,35 +417,6 @@ export const rpsAbi = [
   {
     inputs: [
       {
-        internalType: "address",
-        name: "sender",
-        type: "address",
-      },
-      {
-        internalType: "uint8",
-        name: "choice",
-        type: "uint8",
-      },
-      {
-        internalType: "bytes32",
-        name: "randomSecret",
-        type: "bytes32",
-      },
-    ],
-    name: "getProof",
-    outputs: [
-      {
-        internalType: "bytes32",
-        name: "",
-        type: "bytes32",
-      },
-    ],
-    stateMutability: "pure",
-    type: "function",
-  },
-  {
-    inputs: [
-      {
         internalType: "uint256",
         name: "gameId",
         type: "uint256",
@@ -509,7 +437,7 @@ export const rpsAbi = [
     inputs: [
       {
         internalType: "uint256",
-        name: "gameid",
+        name: "gameId",
         type: "uint256",
       },
       {
@@ -531,12 +459,25 @@ export const rpsAbi = [
   },
   {
     inputs: [],
-    name: "maxgame",
+    name: "maxGame",
     outputs: [
       {
         internalType: "uint256",
         name: "",
         type: "uint256",
+      },
+    ],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [],
+    name: "owner",
+    outputs: [
+      {
+        internalType: "address",
+        name: "",
+        type: "address",
       },
     ],
     stateMutability: "view",
@@ -570,7 +511,20 @@ export const rpsAbi = [
     inputs: [
       {
         internalType: "uint256",
-        name: "gameid",
+        name: "gameId",
+        type: "uint256",
+      },
+    ],
+    name: "retrieveGame",
+    outputs: [],
+    stateMutability: "nonpayable",
+    type: "function",
+  },
+  {
+    inputs: [
+      {
+        internalType: "uint256",
+        name: "gameId",
         type: "uint256",
       },
       {
@@ -585,13 +539,7 @@ export const rpsAbi = [
       },
     ],
     name: "revealGame",
-    outputs: [
-      {
-        internalType: "bool",
-        name: "",
-        type: "bool",
-      },
-    ],
+    outputs: [],
     stateMutability: "nonpayable",
     type: "function",
   },
